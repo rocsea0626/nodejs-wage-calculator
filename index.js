@@ -7,7 +7,11 @@ const calc = require('./src/wage_calculator.js')
 const utils = require('./src/utils.js')
 const csvFilePath = 'data/Hours-201403.csv'
 
-let c = new calc.Calculator()
+// let c = new calc.Calculator()
+
+exports.readCsv = utils.readCsv
+exports.Calculator = calc.Calculator
+
 
 // utils.readCsv(csvFilePath)
 //     .then((df) => {
@@ -18,7 +22,7 @@ let c = new calc.Calculator()
 //     }).catch((err) => {
 //         console.log('error, e=%s', err)
 //     })
-const hoursDay = {date: '27.3.2014', startHrs: ['9:15', '12:45'], endHrs: ['10:15', '21:00']}
+// const hoursDay = {date: '27.3.2014', startHrs: ['9:15', '12:45'], endHrs: ['10:15', '21:00']}
 
 
-c.calculateDailyWage(hoursDay)
+// c.calculateDailyWage(hoursDay)
