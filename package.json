@@ -13,5 +13,9 @@
     "lib"
   ],
   "author": "Guo Haipeng",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "csvtojson": "^1.1.9",
+    "moment": "^2.20.1"
+  }
 }
