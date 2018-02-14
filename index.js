@@ -4,13 +4,12 @@
 "use strict";
 
 const calc = require('./src/wage_calculator.js')
-const csvFile = 'data/Hours-201403.csv'
+const csvFilePath = 'data/Hours-201403.csv'
 
 let c = new calc.Calculator()
-c.test()
-
-c.readCsv(csvFile).then((data) => {
-    console.log(data)
-}).catch((err) => {
-    console.log(err)
-})
+c.calculateWage(csvFilePath)
+    .then((wages) => {
+        console.log(wages)
+    }).catch((err) => {
+        console.log('error, e=%s', err)
+    })
