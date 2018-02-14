@@ -4,12 +4,10 @@
 const csv = require('csvtojson')
 const moment = require('moment');
 const utils = require('./utils.js')
+const config = require('./config.js')
 
 const BASE_DATE = '01-12-2017'
 
-const OVERTIME_THRESHOLD = 8;
-const HOURLY_WAGE = 3.75
-const EVENING_COMPENSATION = HOURLY_WAGE + 1.15
 
 function _isSegmentRegular(window) {
     const regularPeriod = {
@@ -23,14 +21,14 @@ function _isSegmentRegular(window) {
 }
 
 function _calculateHourlyWage(hoursWorked, start, end, hourlyWage) {
-    // console.log('hoursWorked=%d', hoursWorked)
+    console.log('hoursWorked=%d', hoursWorked)
     var remainHours = moment.duration(end - start).asHours();
     // console.log('remainHours=%d', remainHours)
-    var hoursNeeded = OVERTIME_THRESHOLD - hoursWorked;
+    var hoursNeeded = config.OVERTIME_THRESHOLD - hoursWorked;
     // console.log('hoursNeeded=%d', hoursNeeded)
     if (remainHours <= hoursNeeded) {
         return {
-            wage: (remainHours) * hourlyWage,
+            wage: remainHours * hourlyWage,
             hours: remainHours
         }
     }
@@ -49,7 +47,7 @@ function _calculateHourlyWage(hoursWorked, start, end, hourlyWage) {
 function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
     var remainHours = end - start;
     // console.log(moment.duration(remainHours).asHours())
-    var hoursNeeded = (OVERTIME_THRESHOLD - hoursWorked < 0) ? 0 : OVERTIME_THRESHOLD - hoursWorked
+    var hoursNeeded = (config.OVERTIME_THRESHOLD - hoursWorked < 0) ? 0 : config.OVERTIME_THRESHOLD - hoursWorked
     var overdueHours = moment.duration(remainHours).asHours() - hoursNeeded
     // console.log(overdueHours)
     if (overdueHours <= 0) {
@@ -85,29 +83,29 @@ function calculateSegmentWage(window) {
 
     if (_isSegmentRegular(window)) {
         // console.log('_isSegmentRegular() == true')
-        const rt = _calculateHourlyWage(window.totalHours, window.start, window.end, HOURLY_WAGE)
+        const rt = _calculateHourlyWage(window.totalHours, window.start, window.end, config.HOURLY_WAGE)
         // console.log(rt)
         window.regular += rt.hours
         window.wage += rt.wage
         // console.log(window)
 
-        const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, HOURLY_WAGE)
+        const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, config.HOURLY_WAGE)
         window.overtimeRegular += ot.hours
         window.wage += ot.wage
         // console.log(window)
 
     } else {
         // console.log('_isSegmentRegular() == false')
-        const et = _calculateHourlyWage(window.totalHours, window.start, window.end, EVENING_COMPENSATION)
+        const et = _calculateHourlyWage(window.totalHours, window.start, window.end, config.EVENING_COMPENSATION)
         window.evening += et.hours
         window.wage += et.wage
         // console.log(et)
-        const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, EVENING_COMPENSATION)
+        const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, config.EVENING_COMPENSATION)
         window.overtimeEvening += ot.hours
         window.wage += ot.wage
         // console.log(ot)
     }
-    // window.totalHours += moment.duration(window.end - window.start).asHours()
+    window.totalHours += moment.duration(window.end - window.start).asHours()
 }
 
 /**
@@ -159,8 +157,8 @@ function _getSegmentEnd(currStart, lastPossibleEnd) {
      * @type {{startHr: (start hour of regular working hours, endHr: end hour of regular working hours}}
      */
     const regularPeriod = {
-        startHr: moment(currStart).startOf('day').hour(6),
-        endHr: moment(currStart).startOf('day').hour(18),
+        startHr: moment(currStart).startOf('day').hour(config.REGULAR_WORK_HOUR_START),
+        endHr: moment(currStart).startOf('day').hour(config.REGULAR_WORK_HOUR_END),
     }
     // console.log(mStart)
     // console.log(mEnd)
@@ -231,15 +229,16 @@ class Calculator {
     }
 
     calculateMonthlyWage(dataFrame){
-
         const wages = []
         const workHours = _aggregateWorkHoursById(dataFrame)
+
         let d
 
         for (let key in workHours) {
             const pid = key
             let monthlyWage = 0
             let workingDays = workHours[pid].workingDays;
+            console.log(workingDays)
 
             for (let wd in workingDays) {
                 // console.log(workHours[pid].workingDays[wd])

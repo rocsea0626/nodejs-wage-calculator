@@ -9,22 +9,15 @@ const csvFilePath = 'data/Hours-201403.csv'
 
 let c = new calc.Calculator()
 
-utils.readCsv(csvFilePath)
-    .then((df) => {
-
-        const wages = c.calculateMonthlyWage(df)
-        console.log(wages)
-
-    }).catch((err) => {
-        console.log('error, e=%s', err)
-    })
-
-
-
+// utils.readCsv(csvFilePath)
+//     .then((df) => {
 //
-// c.calculateWage(csvFilePath)
-//     .then((wages) => {
+//         const wages = c.calculateMonthlyWage(df)
 //         console.log(wages)
+//
 //     }).catch((err) => {
 //         console.log('error, e=%s', err)
 //     })
+const hoursDay = {date: '27.3.2014', startHrs: ['10:00'], endHrs: ['19:00']}
+
+c.calculateDailyWage(hoursDay)
