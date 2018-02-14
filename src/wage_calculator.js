@@ -49,33 +49,50 @@ function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
     // console.log(moment.duration(remainHours).asHours())
     var hoursNeeded = (config.OVERTIME_THRESHOLD - hoursWorked < 0) ? 0 : config.OVERTIME_THRESHOLD - hoursWorked
     var overdueHours = moment.duration(remainHours).asHours() - hoursNeeded
-    // console.log(overdueHours)
+
+    const overtime = {
+        wage: 0,
+        hours: 0
+    }
+
     if (overdueHours <= 0) {
-        return {
-            wage: 0,
-            hours: 0
+        return overtime
+    }
+
+    // console.log(overdueHours)
+    let countedOverdueHours = hoursWorked - config.OVERTIME_THRESHOLD
+    const interval2Hours = config.OVERTIME_INTERVAL_2 - countedOverdueHours
+    if(interval2Hours > 0){
+        if(overdueHours > interval2Hours){
+            overtime.wage += interval2Hours * hourlyWage * config.OVERTIME_RATE_2
+            overtime.hour += interval2Hours
+            overdueHours -= interval2Hours
+            countedOverdueHours += interval2Hours
+        } else {
+            overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_2
+            overtime.hour += overdueHours
+            return overtime
         }
     }
 
-
-    if (overdueHours <= config.OVERTIME_INTERVAL) {
-        return {
-            hours: overdueHours,
-            wage: hourlyWage * config.OVERTIME_RATE_2 * overdueHours
+    const interval4Hours = config.OVERTIME_INTERVAL_4 - countedOverdueHours
+    if(interval4Hours > 0){
+        if(overdueHours > interval4Hours){
+            overtime.wage += interval4Hours * hourlyWage * config.OVERTIME_RATE_4
+            overtime.hour += interval4Hours
+            overdueHours -= interval4Hours
+            countedOverdueHours += interval4Hours
+        } else {
+            overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_4
+            overtime.hour += overdueHours
+            return overtime
         }
     }
 
-    if (overdueHours <= 2 * config.OVERTIME_INTERVAL) {
-        return {
-            hours: overdueHours,
-            wage: hourlyWage * 1.5 * (overdueHours - config.OVERTIME_INTERVAL) + hourlyWage * config.OVERTIME_RATE_2 * config.OVERTIME_INTERVAL
-        }
-    }
+    overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_4_PLUS
+    overtime.hour += overdueHours
+    return overtime
 
-    return {
-        hours: overdueHours,
-        wage: hourlyWage * config.OVERTIME_RATE_4_PLUS * (overdueHours - 2 * config.OVERTIME_INTERVAL) + hourlyWage * config.OVERTIME_RATE_4 * config.OVERTIME_INTERVAL + hourlyWage * config.OVERTIME_RATE_2 * config.OVERTIME_INTERVAL
-    }
 }
 
 function calculateSegmentWage(window) {

@@ -108,6 +108,24 @@ describe('Daily wage test, 1 record per day', function () {
             const wage = c.calculateDailyWage(hoursDay)
             assert.equal(59.825, wage);
         });
+
+        it('test E1 -> OR, 2X overtime rate', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['22:00'], endHrs: ['12:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(74.825, wage);
+        });
+
+        it('test R -> OR -> OE1', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['19:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(40.8125, wage);
+        });
+
+        it('test R -> OR -> OE1 1.5X overtime rate', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['20:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(48.1625, wage);
+        });
     })
 
 });
