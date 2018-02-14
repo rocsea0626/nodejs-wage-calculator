@@ -58,23 +58,23 @@ function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
     }
 
 
-    if (overdueHours <= 2) {
+    if (overdueHours <= config.OVERTIME_INTERVAL) {
         return {
             hours: overdueHours,
-            wage: hourlyWage * 1.25 * overdueHours
+            wage: hourlyWage * config.OVERTIME_RATE_2 * overdueHours
         }
     }
 
-    if (overdueHours <= 4) {
+    if (overdueHours <= 2 * config.OVERTIME_INTERVAL) {
         return {
             hours: overdueHours,
-            wage: hourlyWage * 1.5 * overdueHours
+            wage: hourlyWage * 1.5 * (overdueHours - config.OVERTIME_INTERVAL) + hourlyWage * config.OVERTIME_RATE_2 * config.OVERTIME_INTERVAL
         }
     }
 
     return {
         hours: overdueHours,
-        wage: hourlyWage * 2 * overdueHours
+        wage: hourlyWage * config.OVERTIME_RATE_4_PLUS * (overdueHours - 2 * config.OVERTIME_INTERVAL) + hourlyWage * config.OVERTIME_RATE_4 * config.OVERTIME_INTERVAL + hourlyWage * config.OVERTIME_RATE_2 * config.OVERTIME_INTERVAL
     }
 }
 
@@ -228,7 +228,7 @@ class Calculator {
 
     }
 
-    calculateMonthlyWage(dataFrame){
+    calculateMonthlyWage(dataFrame) {
         const wages = []
         const workHours = _aggregateWorkHoursById(dataFrame)
 
