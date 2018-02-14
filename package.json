@@ -1,0 +1,17 @@
+{
+  "name": "guo-wage-calculator",
+  "version": "1.0.0",
+  "description": "Calculating each person's monthly wage based on a provided .csv file",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wage",
+    "calculator",
+    "npm",
+    "lib"
+  ],
+  "author": "Guo Haipeng",
+  "license": "MIT"
+}
