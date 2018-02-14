@@ -28,9 +28,9 @@ const hourTypes = {
     }
 }
 
-describe('Daily wage test, 1 record per day', function () {
+let c = new calc.Calculator()
 
-    let c = new calc.Calculator()
+describe('Daily wage test, 1 record per day', function () {
 
     describe('Working hours do not span across regular/evening hours', function () {
         it('test R -> R', function () {
@@ -121,15 +121,94 @@ describe('Daily wage test, 1 record per day', function () {
             assert.equal(40.8125, wage);
         });
 
+        it('test R -> OR -> OE1, 15 mins past hour', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:15'], endHrs: ['19:15']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(41.171875, wage);
+        });
+
         it('test R -> OR -> OE1 1.5X overtime rate', function () {
             const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['20:00']}
             const wage = c.calculateDailyWage(hoursDay)
             assert.equal(48.1625, wage);
+        });
+
+        it('test R -> OR -> OE1 2X overtime rate', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['22:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(65.3125, wage);
+        });
+
+        it('test E2 -> R -> OR', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['23:00'], endHrs: ['9:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(utils.toDecimal2(47.425), utils.toDecimal2(wage));
+        });
+
+        it('test R -> E2 -> OE2 1.5X overtime rate', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['17:00'], endHrs: ['5:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(65, wage);
+        });
+
+        it('test R -> E2 -> OE2 -> OR 2X overtime rate', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['17:00'], endHrs: ['7:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(utils.toDecimal2(82.3), utils.toDecimal2(wage));
         });
     })
 
 });
 
 describe('Daily wage test, 2 records per day', () => {
+
+    describe('Working hours do not span across regular/evening hours', function () {
+        "use strict";
+
+        it('test R -> R', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:00', '10:00'], endHrs: ['10:00', '17:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+
+            assert.equal(30, wage);
+        });
+
+        it('test E1 -> E1', () => {
+            "use strict";
+            const hoursDay = {date: '27.3.2014', startHrs: ['1:00', '3:00'], endHrs: ['2:00','5:30']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(17.15, wage);
+        });
+    })
+
+    describe('Working hours span across regular & evening hours', function () {
+        it('test R -> E2', () => {
+            "use strict";
+            const hoursDay = {date: '27.3.2014', startHrs: ['15:00','18:00'], endHrs: ['18:00', '22:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(30.85, wage);
+
+        });
+        it('test E1 -> R', () => {
+            "use strict";
+            const hoursDay = {date: '27.3.2014', startHrs: ['1:30','4:00'], endHrs: ['4:00', '9:30']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(35.175, wage);
+        });
+    });
+
+    describe('Overtime', ()=>{
+        "use strict";
+        it('test R -> OR -> OE1, 15 mins past hour', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:15', '12:45'], endHrs: ['10:15', '21:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(39.66875, wage);
+        });
+
+        it('test R -> OR -> OE1 1.5X overtime rate', function () {
+            const hoursDay = {date: '27.3.2014', startHrs: ['9:00', '12:00'], endHrs: ['12:00', '20:00']}
+            const wage = c.calculateDailyWage(hoursDay)
+            assert.equal(48.1625, wage);
+        });
+    })
 
 })

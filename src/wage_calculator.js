@@ -14,18 +14,13 @@ function _isSegmentRegular(window) {
         startHr: moment(window.start).startOf('day').hour(6),
         endHr: moment(window.start).startOf('day').hour(18),
     }
-    // console.log(window.start)
-    // console.log(window.end)
 
     return window.start >= regularPeriod.startHr && window.end <= regularPeriod.endHr
 }
 
 function _calculateHourlyWage(hoursWorked, start, end, hourlyWage) {
-    console.log('hoursWorked=%d', hoursWorked)
     var remainHours = moment.duration(end - start).asHours();
-    // console.log('remainHours=%d', remainHours)
     var hoursNeeded = config.OVERTIME_THRESHOLD - hoursWorked;
-    // console.log('hoursNeeded=%d', hoursNeeded)
     if (remainHours <= hoursNeeded) {
         return {
             wage: remainHours * hourlyWage,
@@ -46,7 +41,6 @@ function _calculateHourlyWage(hoursWorked, start, end, hourlyWage) {
 
 function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
     var remainHours = end - start;
-    // console.log(moment.duration(remainHours).asHours())
     var hoursNeeded = (config.OVERTIME_THRESHOLD - hoursWorked < 0) ? 0 : config.OVERTIME_THRESHOLD - hoursWorked
     var overdueHours = moment.duration(remainHours).asHours() - hoursNeeded
 
@@ -59,18 +53,18 @@ function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
         return overtime
     }
 
-    // console.log(overdueHours)
-    let countedOverdueHours = hoursWorked - config.OVERTIME_THRESHOLD
+    let countedOverdueHours = (hoursWorked - config.OVERTIME_THRESHOLD < 0) ? 0 : hoursWorked - config.OVERTIME_THRESHOLD
     const interval2Hours = config.OVERTIME_INTERVAL_2 - countedOverdueHours
+
     if(interval2Hours > 0){
         if(overdueHours > interval2Hours){
             overtime.wage += interval2Hours * hourlyWage * config.OVERTIME_RATE_2
-            overtime.hour += interval2Hours
+            overtime.hours += interval2Hours
             overdueHours -= interval2Hours
             countedOverdueHours += interval2Hours
         } else {
             overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_2
-            overtime.hour += overdueHours
+            overtime.hours += overdueHours
             return overtime
         }
     }
@@ -79,48 +73,41 @@ function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
     if(interval4Hours > 0){
         if(overdueHours > interval4Hours){
             overtime.wage += interval4Hours * hourlyWage * config.OVERTIME_RATE_4
-            overtime.hour += interval4Hours
+            overtime.hours += interval4Hours
             overdueHours -= interval4Hours
             countedOverdueHours += interval4Hours
         } else {
             overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_4
-            overtime.hour += overdueHours
+            overtime.hours += overdueHours
             return overtime
         }
     }
 
     overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_4_PLUS
-    overtime.hour += overdueHours
+    overtime.hours += overdueHours
     return overtime
 
 }
 
 function calculateSegmentWage(window) {
-    // console.log('calculateSegmentWage()')
 
     if (_isSegmentRegular(window)) {
-        // console.log('_isSegmentRegular() == true')
         const rt = _calculateHourlyWage(window.totalHours, window.start, window.end, config.HOURLY_WAGE)
-        // console.log(rt)
         window.regular += rt.hours
         window.wage += rt.wage
-        // console.log(window)
 
         const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, config.HOURLY_WAGE)
         window.overtimeRegular += ot.hours
         window.wage += ot.wage
-        // console.log(window)
 
     } else {
-        // console.log('_isSegmentRegular() == false')
         const et = _calculateHourlyWage(window.totalHours, window.start, window.end, config.EVENING_COMPENSATION)
         window.evening += et.hours
         window.wage += et.wage
-        // console.log(et)
+
         const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, config.EVENING_COMPENSATION)
         window.overtimeEvening += ot.hours
         window.wage += ot.wage
-        // console.log(ot)
     }
     window.totalHours += moment.duration(window.end - window.start).asHours()
 }
@@ -177,8 +164,6 @@ function _getSegmentEnd(currStart, lastPossibleEnd) {
         startHr: moment(currStart).startOf('day').hour(config.REGULAR_WORK_HOUR_START),
         endHr: moment(currStart).startOf('day').hour(config.REGULAR_WORK_HOUR_END),
     }
-    // console.log(mStart)
-    // console.log(mEnd)
 
     if (currStart < regularPeriod.startHr && lastPossibleEnd <= regularPeriod.startHr)
         return lastPossibleEnd
@@ -235,8 +220,6 @@ class Calculator {
                     break
                 window.start = moment(window.end)
                 window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
-                // console.log(window)
-                // console.log(moment(regHrs.endHr))
             }
 
         })
@@ -258,7 +241,6 @@ class Calculator {
             console.log(workingDays)
 
             for (let wd in workingDays) {
-                // console.log(workHours[pid].workingDays[wd])
                 const dailyWage = this.calculateDailyWage(workingDays[wd])
                 d = wd
                 monthlyWage += dailyWage

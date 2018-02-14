@@ -18,6 +18,7 @@ let c = new calc.Calculator()
 //     }).catch((err) => {
 //         console.log('error, e=%s', err)
 //     })
-const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['20:00']}
+const hoursDay = {date: '27.3.2014', startHrs: ['9:15', '12:45'], endHrs: ['10:15', '21:00']}
+
 
 c.calculateDailyWage(hoursDay)
