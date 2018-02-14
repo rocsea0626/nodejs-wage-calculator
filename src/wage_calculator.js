@@ -3,6 +3,7 @@
  */
 const csv = require('csvtojson')
 const moment = require('moment');
+const utils = require('./utils.js')
 
 const BASE_DATE = '01-12-2017'
 
@@ -125,56 +126,66 @@ function regulateHours(startHr, endHr) {
 
 }
 
+function _aggregateWorkHoursById(workingHours) {
+    const cwh = {}
+    let d
+
+    workingHours.forEach(function (val, idx) {
+        let id = val['Person ID']
+        let date = val['Date'];
+        d = date
+        if (!cwh[id]) {
+            cwh[id] = {
+                name: val['Person Name'],
+                workingDays: {}
+            }
+        }
+        if (!cwh[id].workingDays[date]) {
+            cwh[id].workingDays[date] = {
+                date: date,
+                startHrs: [],
+                endHrs: []
+            }
+        }
+        cwh[id].workingDays[date].startHrs.push(val['Start'])
+        cwh[id].workingDays[date].endHrs.push(val['End'])
+    })
+    return cwh
+}
+
+function _getSegmentEnd(currStart, lastPossibleEnd) {
+    /**
+     *
+     * @type {{startHr: (start hour of regular working hours, endHr: end hour of regular working hours}}
+     */
+    const regularPeriod = {
+        startHr: moment(currStart).startOf('day').hour(6),
+        endHr: moment(currStart).startOf('day').hour(18),
+    }
+    // console.log(mStart)
+    // console.log(mEnd)
+
+    if (currStart < regularPeriod.startHr && lastPossibleEnd <= regularPeriod.startHr)
+        return lastPossibleEnd
+    if (currStart < regularPeriod.startHr && lastPossibleEnd > regularPeriod.startHr)
+        return regularPeriod.startHr
+
+    if (currStart >= regularPeriod.endHr && lastPossibleEnd <= moment(regularPeriod.startHr).add(1, 'days'))
+        return lastPossibleEnd
+    if (currStart >= regularPeriod.endHr && lastPossibleEnd > moment(regularPeriod.startHr).add(1, 'days'))
+        return moment(regularPeriod.startHr).add(1, 'days')
+
+    if (currStart >= regularPeriod.startHr && lastPossibleEnd <= regularPeriod.endHr)
+        return lastPossibleEnd
+    if (currStart >= regularPeriod.startHr && lastPossibleEnd > regularPeriod.endHr)
+        return regularPeriod.endHr
+}
+
 class Calculator {
     constructor(hourlyWage = 3.75, envCompensationRate = 1.15, overtimeThreshold = 8) {
         this.hourlyWage = hourlyWage
         this.eveningWage = this.hourlyWage + envCompensationRate
         this.overtimeThreshold = overtimeThreshold
-    }
-
-    readCsv(filePath) {
-        const p = new Promise((res, rej) => {
-            const jsonObjs = []
-
-            csv().fromFile(filePath)
-                .on('json', function (jsonObj) {
-                    jsonObjs.push(jsonObj)
-                })
-                .on('done', function (err) {
-                    res(jsonObjs)
-                    if (err) {
-                        rej(err)
-                    }
-                })
-        })
-        return p
-    }
-
-    aggregateWorkHoursById(workingHours) {
-        const cwh = {}
-        let d
-
-        workingHours.forEach(function (val, idx) {
-            let id = val['Person ID']
-            let date = val['Date'];
-            d = date
-            if (!cwh[id]) {
-                cwh[id] = {
-                    name: val['Person Name'],
-                    workingDays: {}
-                }
-            }
-            if (!cwh[id].workingDays[date]) {
-                cwh[id].workingDays[date] = {
-                    date: date,
-                    startHrs: [],
-                    endHrs: []
-                }
-            }
-            cwh[id].workingDays[date].startHrs.push(val['Start'])
-            cwh[id].workingDays[date].endHrs.push(val['End'])
-        })
-        return cwh
     }
 
     /**
@@ -200,7 +211,7 @@ class Calculator {
             const regHrs = regulateHours(startHr, endHr)
 
             window.start = moment(regHrs.startHr)
-            window.end = calculateWindowEnd(window.start, moment(regHrs.endHr))
+            window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
 
 
             while (window.end <= moment(regHrs.endHr)) {
@@ -208,7 +219,7 @@ class Calculator {
                 if (window.end.isSame(moment(regHrs.endHr)))
                     break
                 window.start = moment(window.end)
-                window.end = calculateWindowEnd(window.start, moment(regHrs.endHr))
+                window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
                 // console.log(window)
                 // console.log(moment(regHrs.endHr))
             }
@@ -217,76 +228,37 @@ class Calculator {
 
         return window.wage
 
-        function calculateWindowEnd(currStart, lastPossibleEnd) {
-            /**
-             *
-             * @type {{startHr: (start hour of regular working hours, endHr: end hour of regular working hours}}
-             */
-            const regularPeriod = {
-                startHr: moment(currStart).startOf('day').hour(6),
-                endHr: moment(currStart).startOf('day').hour(18),
+    }
+
+    calculateMonthlyWage(dataFrame){
+
+        const wages = []
+        const workHours = _aggregateWorkHoursById(dataFrame)
+        let d
+
+        for (let key in workHours) {
+            const pid = key
+            let monthlyWage = 0
+            let workingDays = workHours[pid].workingDays;
+
+            for (let wd in workingDays) {
+                // console.log(workHours[pid].workingDays[wd])
+                const dailyWage = this.calculateDailyWage(workingDays[wd])
+                d = wd
+                monthlyWage += dailyWage
             }
-            // console.log(mStart)
-            // console.log(mEnd)
 
-            if (currStart < regularPeriod.startHr && lastPossibleEnd <= regularPeriod.startHr)
-                return lastPossibleEnd
-            if (currStart < regularPeriod.startHr && lastPossibleEnd > regularPeriod.startHr)
-                return regularPeriod.startHr
-
-            if (currStart >= regularPeriod.endHr && lastPossibleEnd <= moment(regularPeriod.startHr).add(1, 'days'))
-                return lastPossibleEnd
-            if (currStart >= regularPeriod.endHr && lastPossibleEnd > moment(regularPeriod.startHr).add(1, 'days'))
-                return moment(regularPeriod.startHr).add(1, 'days')
-
-            if (currStart >= regularPeriod.startHr && lastPossibleEnd <= regularPeriod.endHr)
-                return lastPossibleEnd
-            if (currStart >= regularPeriod.startHr && lastPossibleEnd > regularPeriod.endHr)
-                return regularPeriod.endHr
+            wages.push({
+                id: pid,
+                month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
+                name: workHours[pid].name,
+                wage: utils.toDecimal2(monthlyWage)
+            })
         }
 
-
+        return wages
     }
 
-    calculateWage(csvFile) {
-
-        const p = new Promise((res, rej)=>{
-            const wages = []
-
-            this.readCsv(csvFile).then((data) => {
-                const workHours = this.aggregateWorkHoursById(data)
-
-                let d
-
-                for (let key in workHours) {
-                    const pid = key
-                    let monthlyWage = 0
-                    let workingDays = workHours[pid].workingDays;
-
-                    for (let wd in workingDays) {
-                        // console.log(workHours[pid].workingDays[wd])
-                        const dailyWage = this.calculateDailyWage(workingDays[wd])
-                        d = wd
-                        monthlyWage += dailyWage
-                    }
-
-                    wages.push({
-                        id: pid,
-                        month: moment(d, 'DD.MM.YYYY').format('DD.MM.YYYY').toString(),
-                        name: workHours[pid].name,
-                        wage: monthlyWage
-                    })
-                }
-
-                res(wages)
-
-            }).catch((err) => {
-                console.log(err)
-                rej(err)
-            })
-        })
-        return p
-    }
 }
 
 exports.Calculator = Calculator;
