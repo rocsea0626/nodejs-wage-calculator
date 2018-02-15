@@ -7,7 +7,80 @@ const defaults = require('./defaults.js')
 
 const BASE_DATE = '01-12-2017'
 
-const Calculator = function (config = new ConfigBuilder().build()) {
+
+class ConfigBuilder {
+
+    constructor() {
+        this.hourlyWage = defaults.HOURLY_WAGE
+        this.eveningCompensation = defaults.EVENING_COMPENSATION
+        this.overtimeThreshold = defaults.OVERTIME_THRESHOLD
+        this.overtimeRate2 = defaults.OVERTIME_RATE_2
+        this.overtimeRate4 = defaults.OVERTIME_RATE_4
+        this.overtimeRate4Plus = defaults.OVERTIME_RATE_4_PLUS
+        this.overtimeInterval2 = defaults.OVERTIME_INTERVAL_2
+        this.overtimeInterval4 = defaults.OVERTIME_INTERVAL_4
+        this.regularWorkhourStart = defaults.REGULAR_WORK_HOUR_START
+        this.regularWorkhourEnd = defaults.REGULAR_WORK_HOUR_END
+    }
+
+    setHourlyWage(hourlyWage) {
+        this.hourlyWage = hourlyWage
+        return this
+    }
+
+    setEveningCompensation(eveningCompensation) {
+        this.eveningCompensation = eveningCompensation
+        return this
+    }
+
+    setOvertimeThreshold(overtimeThreshold) {
+        this.overtimeThreshold = overtimeThreshold
+        return this
+    }
+
+    setOvertimeRate2(overtimeRate2) {
+        this.overtimeRate2 = overtimeRate2
+        return this
+    }
+
+    setOvertimeRate4(overtimeRate4) {
+        this.overtimeRate4 = overtimeRate4
+        return this
+    }
+
+    setOvertimeRate4Plus(overtimeRate4Plus) {
+        this.overtimeRate4Plus = overtimeRate4Plus
+        return this
+    }
+
+    setOvertimeInterval2(overtimeInterval2) {
+        this.overtimeInterval2 = overtimeInterval2
+        return this
+    }
+
+    setOvertimeInterval4(overtimeInterval4) {
+        this.overtimeInterval4 = overtimeInterval4
+        return this
+    }
+
+    setRegularWorkhourStart(regularWorkhourStart) {
+        this.regularWorkhourStart = regularWorkhourStart
+        return this
+    }
+
+    setRegularWorkhourEnd(regularWorkhourEnd) {
+        this.regularWorkhourEnd = regularWorkhourEnd
+        return this
+    }
+
+    build() {
+        return this
+    }
+}
+
+const defaultConfig = new ConfigBuilder().build()
+
+const Calculator = function (config = defaultConfig) {
 
     const _hourlyWage = config.hourlyWage
     const _eveningWage = _hourlyWage + config.eveningCompensation
@@ -138,7 +211,7 @@ const Calculator = function (config = new ConfigBuilder().build()) {
         return {startHr: start, endHr: end}
     }
 
-    const _getSegmentEnd = function (currStart, lastPossibleEnd) {
+    const _getSegmentEnd = function (currStart, maxEnd) {
         /**
          * @type {{startHr: (start hour of regular working hours, endHr: end hour of regular working hours}}
          */
@@ -147,19 +220,19 @@ const Calculator = function (config = new ConfigBuilder().build()) {
             endHr: moment(currStart).startOf('day').hour(_regularWorkhourEnd),
         }
 
-        if (currStart < regularPeriod.startHr && lastPossibleEnd <= regularPeriod.startHr)
-            return lastPossibleEnd
-        if (currStart < regularPeriod.startHr && lastPossibleEnd > regularPeriod.startHr)
+        if (currStart < regularPeriod.startHr && maxEnd <= regularPeriod.startHr)
+            return maxEnd
+        if (currStart < regularPeriod.startHr && maxEnd > regularPeriod.startHr)
             return regularPeriod.startHr
 
-        if (currStart >= regularPeriod.endHr && lastPossibleEnd <= moment(regularPeriod.startHr).add(1, 'days'))
-            return lastPossibleEnd
-        if (currStart >= regularPeriod.endHr && lastPossibleEnd > moment(regularPeriod.startHr).add(1, 'days'))
+        if (currStart >= regularPeriod.endHr && maxEnd <= moment(regularPeriod.startHr).add(1, 'days'))
+            return maxEnd
+        if (currStart >= regularPeriod.endHr && maxEnd > moment(regularPeriod.startHr).add(1, 'days'))
             return moment(regularPeriod.startHr).add(1, 'days')
 
-        if (currStart >= regularPeriod.startHr && lastPossibleEnd <= regularPeriod.endHr)
-            return lastPossibleEnd
-        if (currStart >= regularPeriod.startHr && lastPossibleEnd > regularPeriod.endHr)
+        if (currStart >= regularPeriod.startHr && maxEnd <= regularPeriod.endHr)
+            return maxEnd
+        if (currStart >= regularPeriod.startHr && maxEnd > regularPeriod.endHr)
             return regularPeriod.endHr
     }
 
@@ -190,149 +263,142 @@ const Calculator = function (config = new ConfigBuilder().build()) {
         return cwh
     }
 
-    // Calculator.prototype.calculateDailyWage = function (workHours) {
-    //
-    // }
-
-
-    return {
-
-        calculateDailyWage: function (workHours) {
-            const window = {
-                wage: 0,
-                totalHours: 0,
-                regular: 0,
-                evening: 0,
-                overtimeRegular: 0,
-                overtimeEvening: 0,
-                start: 0,
-                end: 0
-            }
-
-            workHours.startHrs.forEach((val, idx) => {
-                const startHr = val
-                const endHr = workHours.endHrs[idx]
-                const regHrs = _regulateHours(startHr, endHr)
-
-                window.start = moment(regHrs.startHr)
-                window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
-
-
-                while (window.end <= moment(regHrs.endHr)) {
-                    _calculateSegmentWage(window)
-                    if (window.end.isSame(moment(regHrs.endHr)))
-                        break
-                    window.start = moment(window.end)
-                    window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
-                }
-
-            })
-
-            return window.wage
-        },
-
-        calculateMonthlyWage: function (dataFrame) {
-            const wages = {
-                wages: []
-            }
-            const workHours = _aggregateWorkHoursById(dataFrame)
-
-            let d
-
-            for (let key in workHours) {
-                const pid = key
-                let monthlyWage = 0
-                let workingDays = workHours[pid].workingDays;
-                // console.log(workingDays)
-
-                for (let wd in workingDays) {
-                    const dailyWage = this.calculateDailyWage(workingDays[wd])
-                    d = wd
-                    monthlyWage += dailyWage
-                }
-
-                wages['wages'].push({
-                    // id: pid,
-                    // month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
-                    name: workHours[pid].name,
-                    wage: utils.toDecimal2(monthlyWage)
-                })
-            }
-            wages['month'] = moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString()
-
-            return wages
+    Calculator.prototype.calculateDailyWage = function (workHours) {
+        const window = {
+            wage: 0,
+            totalHours: 0,
+            regular: 0,
+            evening: 0,
+            overtimeRegular: 0,
+            overtimeEvening: 0,
+            start: 0,
+            end: 0
         }
-    }
-}
 
-class ConfigBuilder {
+        workHours.startHrs.forEach((val, idx) => {
+            const startHr = val
+            const endHr = workHours.endHrs[idx]
+            const regHrs = _regulateHours(startHr, endHr)
 
-    constructor() {
-        this.hourlyWage = defaults.HOURLY_WAGE
-        this.eveningCompensation = defaults.EVENING_COMPENSATION
-        this.overtimeThreshold = defaults.OVERTIME_THRESHOLD
-        this.overtimeRate2 = defaults.OVERTIME_RATE_2
-        this.overtimeRate4 = defaults.OVERTIME_RATE_4
-        this.overtimeRate4Plus = defaults.OVERTIME_RATE_4_PLUS
-        this.overtimeInterval2 = defaults.OVERTIME_INTERVAL_2
-        this.overtimeInterval4 = defaults.OVERTIME_INTERVAL_4
-        this.regularWorkhourStart = defaults.REGULAR_WORK_HOUR_START
-        this.regularWorkhourEnd = defaults.REGULAR_WORK_HOUR_END
-    }
+            window.start = moment(regHrs.startHr)
+            window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
 
-    setHourlyWage(hourlyWage){
-        this.hourlyWage = hourlyWage
-        return this
-    }
 
-    setEveningCompensation(eveningCompensation){
-        this.eveningCompensation = eveningCompensation
-        return this
+            while (window.end <= moment(regHrs.endHr)) {
+                _calculateSegmentWage(window)
+                if (window.end.isSame(moment(regHrs.endHr)))
+                    break
+                window.start = moment(window.end)
+                window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
+            }
+
+        })
+
+        return window.wage
     }
 
-    setOvertimeThreshold(overtimeThreshold){
-        this.overtimeThreshold = overtimeThreshold
-        return this
+    Calculator.prototype.calculateMonthlyWage = function (dataFrame) {
+        "use strict";
+        const wages = {
+            wages: []
+        }
+        const workHours = _aggregateWorkHoursById(dataFrame)
+
+        let d
+
+        for (let key in workHours) {
+            const pid = key
+            let monthlyWage = 0
+            let workingDays = workHours[pid].workingDays;
+            // console.log(workingDays)
+
+            for (let wd in workingDays) {
+                const dailyWage = this.calculateDailyWage(workingDays[wd])
+                d = wd
+                monthlyWage += dailyWage
+            }
+
+            wages['wages'].push({
+                // id: pid,
+                // month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
+                name: workHours[pid].name,
+                wage: utils.toDecimal2(monthlyWage)
+            })
+        }
+        wages['month'] = moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString()
+
+        return wages
     }
 
-    setOvertimeRate2(overtimeRate2){
-        this.overtimeRate2 = overtimeRate2
-        return this
-    }
 
-    setOvertimeRate4(overtimeRate4){
-        this.overtimeRate4 = overtimeRate4
-        return this
-    }
-
-    setOvertimeRate4Plus(overtimeRate4Plus){
-        this.overtimeRate4Plus = overtimeRate4Plus
-        return this
-    }
-
-    setOvertimeInterval2(overtimeInterval2){
-        this.overtimeInterval2 = overtimeInterval2
-        return this
-    }
-
-    setOvertimeInterval4(overtimeInterval4){
-        this.overtimeInterval4 = overtimeInterval4
-        return this
-    }
-
-    setRegularWorkhourStart(regularWorkhourStart){
-        this.regularWorkhourStart = regularWorkhourStart
-        return this
-    }
-
-    setRegularWorkhourEnd(regularWorkhourEnd){
-        this.regularWorkhourEnd = regularWorkhourEnd
-        return this
-    }
-
-    build(){
-        return this
-    }
+    // return {
+    //
+    //     calculateDailyWage: function (workHours) {
+    //         const window = {
+    //             wage: 0,
+    //             totalHours: 0,
+    //             regular: 0,
+    //             evening: 0,
+    //             overtimeRegular: 0,
+    //             overtimeEvening: 0,
+    //             start: 0,
+    //             end: 0
+    //         }
+    //
+    //         workHours.startHrs.forEach((val, idx) => {
+    //             const startHr = val
+    //             const endHr = workHours.endHrs[idx]
+    //             const regHrs = _regulateHours(startHr, endHr)
+    //
+    //             window.start = moment(regHrs.startHr)
+    //             window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
+    //
+    //
+    //             while (window.end <= moment(regHrs.endHr)) {
+    //                 _calculateSegmentWage(window)
+    //                 if (window.end.isSame(moment(regHrs.endHr)))
+    //                     break
+    //                 window.start = moment(window.end)
+    //                 window.end = _getSegmentEnd(window.start, moment(regHrs.endHr))
+    //             }
+    //
+    //         })
+    //
+    //         return window.wage
+    //     },
+    //
+    //     calculateMonthlyWage: function (dataFrame) {
+    //         const wages = {
+    //             wages: []
+    //         }
+    //         const workHours = _aggregateWorkHoursById(dataFrame)
+    //
+    //         let d
+    //
+    //         for (let key in workHours) {
+    //             const pid = key
+    //             let monthlyWage = 0
+    //             let workingDays = workHours[pid].workingDays;
+    //             // console.log(workingDays)
+    //
+    //             for (let wd in workingDays) {
+    //                 const dailyWage = this.calculateDailyWage(workingDays[wd])
+    //                 d = wd
+    //                 monthlyWage += dailyWage
+    //             }
+    //
+    //             wages['wages'].push({
+    //                 // id: pid,
+    //                 // month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
+    //                 name: workHours[pid].name,
+    //                 wage: utils.toDecimal2(monthlyWage)
+    //             })
+    //         }
+    //         wages['month'] = moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString()
+    //
+    //         return wages
+    //     }
+    // }
 }
 
 exports.Calculator = Calculator
