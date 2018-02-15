@@ -225,10 +225,10 @@ const Calculator = function (config = defaultConfig) {
         let start = moment(BASE_DATE + ' ' + startHr, 'DD-MM-YYYY HH:mm');
         let end = moment(BASE_DATE + ' ' + endHr, 'DD-MM-YYYY HH:mm');
         end = (end < start) ? end.add(1, 'days') : end
-        if (!start.isValid() || !end.isValid())
-            throw new Error('invalid date format, d=%s', start)
+        if (!start.isValid())
+            throw new Error('invalid date format, start= ' + startHr)
         if (!end.isValid())
-            throw new Error('invalid date format, d=%s', end)
+            throw new Error('invalid date format, end= ' + endHr)
         return {startHr: start, endHr: end}
     }
 
@@ -259,12 +259,15 @@ const Calculator = function (config = defaultConfig) {
 
     const _aggregateWorkHoursById = function (workingHours) {
         const cwh = {}
-        let d
+        let month
 
         workingHours.forEach(function (val, idx) {
             let id = val['Person ID']
             let date = val['Date'];
-            d = date
+            if (month && month !== moment(date, 'DD.MM.YYYY').month()) {
+                throw new Error('more than 1 month appear in the data file')
+            }
+            month = moment(date, 'DD.MM.YYYY').month()
             if (!cwh[id]) {
                 cwh[id] = {
                     name: val['Person Name'],
@@ -339,38 +342,44 @@ const Calculator = function (config = defaultConfig) {
         const wages = {
             wages: []
         }
-        const workHours = _aggregateWorkHoursById(dataFrame)
 
-        let d
+        try {
+            const workHours = _aggregateWorkHoursById(dataFrame)
+            let d
 
-        for (let key in workHours) {
-            const pid = key
-            let monthlyWage = 0
-            let workingDays = workHours[pid].workingDays;
-            // console.log(workingDays)
+            for (let key in workHours) {
+                const pid = key
+                let monthlyWage = 0
+                let workingDays = workHours[pid].workingDays;
+                // console.log(workingDays)
 
-            for (let wd in workingDays) {
-                try {
-                    const dailyWage = this.calculateDailyWage(workingDays[wd])
-                    d = wd
-                    monthlyWage += dailyWage
-                } catch (err) {
-                    console.log(err)
-                    monthlyWage = -1
-                    break
+                for (let wd in workingDays) {
+                    // console.log(moment(wd, 'DD.MM.YYYY').month())
+                    try {
+                        const dailyWage = this.calculateDailyWage(workingDays[wd])
+                        d = wd
+                        monthlyWage += dailyWage
+                    } catch (err) {
+                        console.log(err)
+                        monthlyWage = -1
+                        break
+                    }
                 }
+
+                wages['wages'].push({
+                    // id: pid,
+                    // month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
+                    name: workHours[pid].name,
+                    wage: utils.toDecimal2(monthlyWage)
+                })
             }
+            wages['month'] = moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString()
 
-            wages['wages'].push({
-                // id: pid,
-                // month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
-                name: workHours[pid].name,
-                wage: utils.toDecimal2(monthlyWage)
-            })
+            return wages
+
+        } catch (err) {
+            console.log(err)
         }
-        wages['month'] = moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString()
-
-        return wages
     }
 
 }
