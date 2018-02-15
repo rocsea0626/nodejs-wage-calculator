@@ -3,13 +3,14 @@
  */
 "use strict";
 
-const calc = require('./src/wage_calculator.js')
-const cal = require('./src/calculator.js')
+const calc = require('./src/calculator.js')
 const utils = require('./src/utils.js')
 const csvFilePath = 'data/Hours-201403.csv'
 
-let c = new calc.Calculator()
-let c1 = new cal.Calculator()
+
+// let c1 = new calc.Calculator()
+// let conf = new calc.ConfigBuilder().setHourlyWage(4).setEveningCompensation(2).build()
+// console.log(conf)
 // utils.readCsv(csvFilePath)
 //     .then((df) => {
 //
@@ -20,9 +21,9 @@ let c1 = new cal.Calculator()
 //         console.log('error, e=%s', err)
 //     })
 // const hoursDay = {date: '27.3.2014', startHrs: ['9:15', '12:45'], endHrs: ['10:15', '21:00']}
-const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['17:00']}
-let wage = c1.calculateDailyWage(hoursDay)
-console.log(wage)
+// const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['17:00']}
+// let wage = c1.calculateDailyWage(hoursDay)
+// console.log(wage)
 
 exports.readCsv = utils.readCsv
 exports.Calculator = calc.Calculator

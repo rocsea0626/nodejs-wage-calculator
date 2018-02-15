@@ -3,14 +3,14 @@
  */
 const moment = require('moment');
 const utils = require('./utils.js')
-const config = require('./config.js')
+const defaults = require('./defaults.js')
 
 const BASE_DATE = '01-12-2017'
 
-const Calculator = function (hourlyWage = 3.75) {
+const Calculator = function (config = new ConfigBuilder().build()) {
 
-    const _hourlyWage = hourlyWage
-    const _eveningWage = hourlyWage + 1.15
+    const _hourlyWage = config.hourlyWage
+    const _eveningWage = _hourlyWage + config.eveningCompensation
 
     const _regularWorkhourStart = 6
     const _regularWorkhourEnd = 18
@@ -143,8 +143,8 @@ const Calculator = function (hourlyWage = 3.75) {
          * @type {{startHr: (start hour of regular working hours, endHr: end hour of regular working hours}}
          */
         const regularPeriod = {
-            startHr: moment(currStart).startOf('day').hour(config.REGULAR_WORK_HOUR_START),
-            endHr: moment(currStart).startOf('day').hour(config.REGULAR_WORK_HOUR_END),
+            startHr: moment(currStart).startOf('day').hour(_regularWorkhourStart),
+            endHr: moment(currStart).startOf('day').hour(_regularWorkhourEnd),
         }
 
         if (currStart < regularPeriod.startHr && lastPossibleEnd <= regularPeriod.startHr)
@@ -256,7 +256,77 @@ const Calculator = function (hourlyWage = 3.75) {
             return wages
         }
     }
+}
 
+class ConfigBuilder {
+
+    constructor() {
+        this.hourlyWage = defaults.HOURLY_WAGE
+        this.eveningCompensation = defaults.EVENING_COMPENSATION
+        this.overtimeThreshold = defaults.OVERTIME_THRESHOLD
+        this.overtimeRate2 = defaults.OVERTIME_RATE_2
+        this.overtimeRate4 = defaults.OVERTIME_RATE_4
+        this.overtimeRate4Plus = defaults.OVERTIME_RATE_4_PLUS
+        this.overtimeInterval2 = defaults.OVERTIME_INTERVAL_2
+        this.overtimeInterval4 = defaults.OVERTIME_INTERVAL_4
+        this.regularWorkhourStart = defaults.REGULAR_WORK_HOUR_START
+        this.regularWorkhourEnd = defaults.REGULAR_WORK_HOUR_END
+    }
+
+    setHourlyWage(hourlyWage){
+        this.hourlyWage = hourlyWage
+        return this
+    }
+
+    setEveningCompensation(eveningCompensation){
+        this.eveningCompensation = eveningCompensation
+        return this
+    }
+
+    setOvertimeThreshold(overtimeThreshold){
+        this.overtimeThreshold = overtimeThreshold
+        return this
+    }
+
+    setOvertimeRate2(overtimeRate2){
+        this.overtimeRate2 = overtimeRate2
+        return this
+    }
+
+    setOvertimeRate4(overtimeRate4){
+        this.overtimeRate4 = overtimeRate4
+        return this
+    }
+
+    setOvertimeRate4Plus(overtimeRate4Plus){
+        this.overtimeRate4Plus = overtimeRate4Plus
+        return this
+    }
+
+    setOvertimeInterval2(overtimeInterval2){
+        this.overtimeInterval2 = overtimeInterval2
+        return this
+    }
+
+    setOvertimeInterval4(overtimeInterval4){
+        this.overtimeInterval4 = overtimeInterval4
+        return this
+    }
+
+    setRegularWorkhourStart(regularWorkhourStart){
+        this.regularWorkhourStart = regularWorkhourStart
+        return this
+    }
+
+    setRegularWorkhourEnd(regularWorkhourEnd){
+        this.regularWorkhourEnd = regularWorkhourEnd
+        return this
+    }
+
+    build(){
+        return this
+    }
 }
 
 exports.Calculator = Calculator
+exports.ConfigBuilder = ConfigBuilder

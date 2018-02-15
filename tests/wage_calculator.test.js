@@ -2,7 +2,6 @@
  * Created by guo_haipeng on 15/02/2018.
  */
 const assert = require('assert');
-const config = require('../src/config.js')
 const utils = require('../src/utils.js')
 const calc = require('../src/calculator.js')
 
