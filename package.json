@@ -4,7 +4,8 @@
   "description": "Calculating each person's monthly wage based on a provided .csv file",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests/*.test.js"
+    "test": "mocha tests/*.test.js",
+    "test-coverage": "nyc --reporter=text mocha tests/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
     "moment": "^2.20.1"
   },
   "devDependencies": {
-    "mocha": "^5.0.1"
+    "mocha": "^5.0.1",
+    "nyc": "^11.4.1"
   }
 }
