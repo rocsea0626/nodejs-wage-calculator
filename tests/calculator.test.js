@@ -21,10 +21,7 @@ const hourTypes = {
     E2: 'evening hours after 18:00',
     OR: 'overtime regular hours',
     OE1: 'overtime evening hours',
-    OE2: 'overtime evening hours',
-    fromTo: function (ht1, ht2) {
-        return hourTypes[ht1] + ' -> ' + hourTypes[ht2]
-    }
+    OE2: 'overtime evening hours'
 }
 
 let c = new calc.Calculator()

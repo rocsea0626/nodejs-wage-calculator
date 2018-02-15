@@ -6,6 +6,10 @@
   "scripts": {
     "test": "mocha tests/*.test.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rocsea0626/nodejs-wage-calculator.git"
+  },
   "keywords": [
     "wage",
     "calculator",

@@ -190,6 +190,10 @@ const Calculator = function (config = new ConfigBuilder().build()) {
         return cwh
     }
 
+    // Calculator.prototype.calculateDailyWage = function (workHours) {
+    //
+    // }
+
 
     return {
 
