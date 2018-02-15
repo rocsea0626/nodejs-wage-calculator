@@ -8,12 +8,11 @@ const utils = require('./src/utils.js')
 // const csvFilePath = 'data/Hours-201403.csv'
 
 // let conf = new calc.ConfigBuilder().setHourlyWage(4).setEveningCompensation(2).build()
-// let c = new calc.Calculator()
-// console.log(conf)
+// let c = new calc.Calculator(conf)
 // utils.readCsv(csvFilePath)
 //     .then((df) => {
 //
-//         const wages = c1.calculateMonthlyWage(df)
+//         const wages = c.calculateMonthlyWage(df)
 //         console.log(wages)
 //
 //     }).catch((err) => {

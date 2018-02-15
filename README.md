@@ -64,7 +64,9 @@ console.log(wage)
 + config a calculator
 ```
 const calc = require('guo-wage-calculator')
-let conf = new calc.ConfigBuilder().setHourlyWage(4).setEveningCompensation(2).build()
-const c = new calc.Calculator(conf)
+const conf = new calc.ConfigBuilder().setHourlyWage(4).setEveningCompensation(2).build()
+if(conf){
+    const c = new calc.Calculator(conf)
+}
 
 ```

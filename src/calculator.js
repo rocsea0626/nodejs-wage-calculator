@@ -73,8 +73,25 @@ class ConfigBuilder {
         return this
     }
 
+    validate() {
+
+        for (let prop in this) {
+            if (this[prop] < 0)
+                return false
+        }
+
+        if(this.overtimeInterval2 >= this.overtimeInterval4)
+            return false
+
+        if(this.regularWorkhourStart >= this.regularWorkhourEnd)
+            return false
+
+        return true
+    }
+
     build() {
-        return this
+        if(this.validate())
+            return this
     }
 }
 
@@ -263,6 +280,16 @@ const Calculator = function (config = defaultConfig) {
         return cwh
     }
 
+
+    /**
+     * Calculating daily wage for one person from given workHours on that day
+     *
+     * Upon receiving a pair of {start, end} time range, this function divides this time range into one or multiple
+     * time segments for calculation
+     *
+     * @param workHours sampleWorkHours: {date: '27.3.2014', startHrs: ['9:15', '12:45'], endHrs: ['10:15', '21:00']}
+     * @returns {number}
+     */
     Calculator.prototype.calculateDailyWage = function (workHours) {
         const window = {
             wage: 0,
@@ -297,6 +324,13 @@ const Calculator = function (config = defaultConfig) {
         return window.wage
     }
 
+
+    /**
+     * Calculating monthly wage for each person from given dataFrame
+     *
+     * @param dataFrame json objects parsed from .csv file
+     * @returns {{wages: Array}}
+     */
     Calculator.prototype.calculateMonthlyWage = function (dataFrame) {
         "use strict";
         const wages = {
