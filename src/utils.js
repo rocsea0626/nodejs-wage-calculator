@@ -9,10 +9,10 @@ exports.readCsv = function (filePath) {
                 jsonObjs.push(jsonObj)
             })
             .on('done', function (err) {
-                res(jsonObjs)
                 if (err) {
                     rej(err)
                 }
+                res(jsonObjs)
             })
     })
     return p
