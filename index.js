@@ -6,7 +6,7 @@
 const calc = require('./src/calculator.js')
 const utils = require('./src/utils.js')
 const moment = require('moment');
-const csvFilePath = 'data1/Hours-201403.csv'
+const csvFilePath = 'data/Hours-201403.csv'
 
 // let conf = new calc.ConfigBuilder().setHourlyWage(4).setEveningCompensation(2).build()
 // let c = new calc.Calculator()
