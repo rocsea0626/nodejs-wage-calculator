@@ -4,7 +4,7 @@
 const assert = require('assert');
 const config = require('../src/config.js')
 const utils = require('../src/utils.js')
-const calc = require('../src/wage_calculator.js')
+const calc = require('../src/calculator.js')
 
 // describe('Array', function () {
 //     describe('#indexOf()', function () {
