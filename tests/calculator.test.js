@@ -208,3 +208,18 @@ describe('Daily wage test, 2 records per day', () => {
     })
 
 })
+
+describe('Test private fields', function () {
+    "use strict";
+    let c = new calc.Calculator()
+    const conf = new calc.ConfigBuilder().setHourlyWage(4).build()
+    let c1 = new calc.Calculator(conf)
+
+    const hoursDay = {date: '27.3.2014', startHrs: ['9:00'], endHrs: ['17:00']}
+    const wage = c.calculateDailyWage(hoursDay)
+    assert.equal(30, wage);
+
+    const wage1 = c1.calculateDailyWage(hoursDay)
+    assert.equal(32, wage1);
+})
+
