@@ -25,5 +25,6 @@ const utils = require('./src/utils.js')
 
 exports.readCsv = utils.readCsv
 exports.Calculator = calc.Calculator
+exports.ConfigBuilder = calc.ConfigBuilder
 
 
