@@ -225,6 +225,10 @@ const Calculator = function (config = defaultConfig) {
         let start = moment(BASE_DATE + ' ' + startHr, 'DD-MM-YYYY HH:mm');
         let end = moment(BASE_DATE + ' ' + endHr, 'DD-MM-YYYY HH:mm');
         end = (end < start) ? end.add(1, 'days') : end
+        if (!start.isValid() || !end.isValid())
+            throw new Error('invalid date format, d=%s', start)
+        if (!end.isValid())
+            throw new Error('invalid date format, d=%s', end)
         return {startHr: start, endHr: end}
     }
 
@@ -320,7 +324,6 @@ const Calculator = function (config = defaultConfig) {
             }
 
         })
-
         return window.wage
     }
 
@@ -347,9 +350,15 @@ const Calculator = function (config = defaultConfig) {
             // console.log(workingDays)
 
             for (let wd in workingDays) {
-                const dailyWage = this.calculateDailyWage(workingDays[wd])
-                d = wd
-                monthlyWage += dailyWage
+                try {
+                    const dailyWage = this.calculateDailyWage(workingDays[wd])
+                    d = wd
+                    monthlyWage += dailyWage
+                } catch (err) {
+                    console.log(err)
+                    monthlyWage = -1
+                    break
+                }
             }
 
             wages['wages'].push({
