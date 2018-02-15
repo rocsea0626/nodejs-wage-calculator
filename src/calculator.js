@@ -80,17 +80,17 @@ class ConfigBuilder {
                 return false
         }
 
-        if(this.overtimeInterval2 >= this.overtimeInterval4)
+        if (this.overtimeInterval2 >= this.overtimeInterval4)
             return false
 
-        if(this.regularWorkhourStart >= this.regularWorkhourEnd)
+        if (this.regularWorkhourStart >= this.regularWorkhourEnd)
             return false
 
         return true
     }
 
     build() {
-        if(this.validate())
+        if (this.validate())
             return this
     }
 }
@@ -112,7 +112,7 @@ const Calculator = function (config = defaultConfig) {
         overtimeInterval4: 4
     }
 
-    const _isSegmentRegular = function (segment, config) {
+    const _isSegmentInRegularHours = function (segment, config) {
         const regularPeriod = {
             startHr: moment(segment.start).startOf('day').hour(config.regularWorkhourStart),
             endHr: moment(segment.start).startOf('day').hour(config.regularWorkhourEnd),
@@ -192,7 +192,7 @@ const Calculator = function (config = defaultConfig) {
     }
 
     const _calculateSegmentWage = function (segment, config) {
-        if (_isSegmentRegular(segment, config)) {
+        if (_isSegmentInRegularHours(segment, config)) {
             const rt = _calculateHourlyWage(segment.totalHours, segment.start, segment.end, config, config.hourlyWage)
             segment.regular += rt.hours
             segment.wage += rt.wage
@@ -232,28 +232,28 @@ const Calculator = function (config = defaultConfig) {
         /**
          * @type {{startHr: (start hour of regular working hours, endHr: end hour of regular working hours}}
          */
-        const regularPeriod = {
+        const regularHours = {
             startHr: moment(currStart).startOf('day').hour(config.regularWorkhourStart),
             endHr: moment(currStart).startOf('day').hour(config.regularWorkhourEnd),
         }
 
-        if (currStart < regularPeriod.startHr && maxEnd <= regularPeriod.startHr)
+        if (currStart < regularHours.startHr && maxEnd <= regularHours.startHr)
             return maxEnd
-        if (currStart < regularPeriod.startHr && maxEnd > regularPeriod.startHr)
-            return regularPeriod.startHr
+        if (currStart < regularHours.startHr && maxEnd > regularHours.startHr)
+            return regularHours.startHr
 
-        if (currStart >= regularPeriod.endHr && maxEnd <= moment(regularPeriod.startHr).add(1, 'days'))
+        if (currStart >= regularHours.endHr && maxEnd <= moment(regularHours.startHr).add(1, 'days'))
             return maxEnd
-        if (currStart >= regularPeriod.endHr && maxEnd > moment(regularPeriod.startHr).add(1, 'days'))
-            return moment(regularPeriod.startHr).add(1, 'days')
+        if (currStart >= regularHours.endHr && maxEnd > moment(regularHours.startHr).add(1, 'days'))
+            return moment(regularHours.startHr).add(1, 'days')
 
-        if (currStart >= regularPeriod.startHr && maxEnd <= regularPeriod.endHr)
+        if (currStart >= regularHours.startHr && maxEnd <= regularHours.endHr)
             return maxEnd
-        if (currStart >= regularPeriod.startHr && maxEnd > regularPeriod.endHr)
-            return regularPeriod.endHr
+        if (currStart >= regularHours.startHr && maxEnd > regularHours.endHr)
+            return regularHours.endHr
     }
 
-    function _aggregateWorkHoursById(workingHours) {
+    const _aggregateWorkHoursById = function (workingHours) {
         const cwh = {}
         let d
 
