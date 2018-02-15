@@ -228,7 +228,9 @@ const Calculator = function (config = new ConfigBuilder().build()) {
         },
 
         calculateMonthlyWage: function (dataFrame) {
-            const wages = []
+            const wages = {
+                wages: []
+            }
             const workHours = _aggregateWorkHoursById(dataFrame)
 
             let d
@@ -245,13 +247,14 @@ const Calculator = function (config = new ConfigBuilder().build()) {
                     monthlyWage += dailyWage
                 }
 
-                wages.push({
-                    id: pid,
-                    month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
+                wages['wages'].push({
+                    // id: pid,
+                    // month: moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString(),
                     name: workHours[pid].name,
                     wage: utils.toDecimal2(monthlyWage)
                 })
             }
+            wages['month'] = moment(d, 'DD.MM.YYYY').format('MM.YYYY').toString()
 
             return wages
         }
