@@ -11,12 +11,21 @@ const Calculator = function (hourlyWage = 3.75) {
 
     const _hourlyWage = hourlyWage
     const _eveningWage = hourlyWage + 1.15
+
+    const _regularWorkhourStart = 6
+    const _regularWorkhourEnd = 18
+
     const _overtimeThreshold = 8
+    const _overtimeRate2 = 1.25
+    const _overtimeRate4 = 1.5
+    const _overtimeRate4Plus = 2
+    const _overtimeInterval2 = 2
+    const _overtimeInterval4 = 4
 
     const _isSegmentRegular = function (segment) {
         const regularPeriod = {
-            startHr: moment(segment.start).startOf('day').hour(6),
-            endHr: moment(segment.start).startOf('day').hour(18),
+            startHr: moment(segment.start).startOf('day').hour(_regularWorkhourStart),
+            endHr: moment(segment.start).startOf('day').hour(_regularWorkhourEnd),
         }
 
         return segment.start >= regularPeriod.startHr && segment.end <= regularPeriod.endHr
@@ -58,36 +67,36 @@ const Calculator = function (hourlyWage = 3.75) {
         }
 
         let countedOverdueHours = (hoursWorked - _overtimeThreshold < 0) ? 0 : hoursWorked - _overtimeThreshold
-        const interval2Hours = config.OVERTIME_INTERVAL_2 - countedOverdueHours
+        const interval2Hours = _overtimeInterval2 - countedOverdueHours
 
-        if(interval2Hours > 0){
-            if(overdueHours > interval2Hours){
-                overtime.wage += interval2Hours * hourlyWage * config.OVERTIME_RATE_2
+        if (interval2Hours > 0) {
+            if (overdueHours > interval2Hours) {
+                overtime.wage += interval2Hours * hourlyWage * _overtimeRate2
                 overtime.hours += interval2Hours
                 overdueHours -= interval2Hours
                 countedOverdueHours += interval2Hours
             } else {
-                overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_2
+                overtime.wage += overdueHours * hourlyWage * _overtimeRate2
                 overtime.hours += overdueHours
                 return overtime
             }
         }
 
-        const interval4Hours = config.OVERTIME_INTERVAL_4 - countedOverdueHours
-        if(interval4Hours > 0){
-            if(overdueHours > interval4Hours){
-                overtime.wage += interval4Hours * hourlyWage * config.OVERTIME_RATE_4
+        const interval4Hours = _overtimeInterval4 - countedOverdueHours
+        if (interval4Hours > 0) {
+            if (overdueHours > interval4Hours) {
+                overtime.wage += interval4Hours * hourlyWage * _overtimeRate4
                 overtime.hours += interval4Hours
                 overdueHours -= interval4Hours
                 countedOverdueHours += interval4Hours
             } else {
-                overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_4
+                overtime.wage += overdueHours * hourlyWage * _overtimeRate4
                 overtime.hours += overdueHours
                 return overtime
             }
         }
 
-        overtime.wage += overdueHours * hourlyWage * config.OVERTIME_RATE_4_PLUS
+        overtime.wage += overdueHours * hourlyWage * _overtimeRate4Plus
         overtime.hours += overdueHours
         return overtime
     }
