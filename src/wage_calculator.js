@@ -42,7 +42,7 @@ class Calculator {
 
 
             while (window.end <= moment(regHrs.endHr)) {
-                calculateSegmentWage(window)
+                calculateSegmentWage(window, this.hourlyWage)
                 if (window.end.isSame(moment(regHrs.endHr)))
                     break
                 window.start = moment(window.end)
@@ -167,14 +167,14 @@ function _calculateOvertimeWage(hoursWorked, start, end, hourlyWage) {
 
 }
 
-function calculateSegmentWage(window) {
+function calculateSegmentWage(window, hourlyWage) {
 
     if (_isSegmentRegular(window)) {
-        const rt = _calculateHourlyWage(window.totalHours, window.start, window.end, config.HOURLY_WAGE)
+        const rt = _calculateHourlyWage(window.totalHours, window.start, window.end, hourlyWage)
         window.regular += rt.hours
         window.wage += rt.wage
 
-        const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, config.HOURLY_WAGE)
+        const ot = _calculateOvertimeWage(window.totalHours, window.start, window.end, hourlyWage)
         window.overtimeRegular += ot.hours
         window.wage += ot.wage
 
@@ -258,6 +258,7 @@ function _getSegmentEnd(currStart, lastPossibleEnd) {
     if (currStart >= regularPeriod.startHr && lastPossibleEnd > regularPeriod.endHr)
         return regularPeriod.endHr
 }
+
 
 
 exports.Calculator = Calculator;
